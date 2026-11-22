@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockMaster | Ürün Yönetimi</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 35px;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #64748b;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 22px;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000008;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 17px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+        }
+
+        button {
+            border: none;
+            background: #2563eb;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 15px 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            color: #64748b;
+        }
+
+        .message {
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        @media(max-width: 850px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div>
+            <h1>Ürün Yönetimi</h1>
+            <p>Ürünlerini ve stok miktarlarını buradan yönet.</p>
+        </div>
+
+        <a href="/">← Ana Sayfaya Dön</a>
+    </div>
+
+    <div class="container">
+
+        <div class="panel">
+            <h3>Yeni Ürün Ekle</h3>
+
+            <form id="productForm">
+
+                <label>Ürün Adı</label>
+                <input type="text" name="name" required>
+
+                <label>Açıklama</label>
+                <textarea name="description"></textarea>
+
+                <label>Fiyat (TL)</label>
+                <input type="number" name="price" min="0"
+                       step="0.01" required>
+
+                <label>Stok Miktarı</label>
+                <input type="number" name="stock_quantity"
+                       min="0" step="1" required>
+
+                <button type="submit">Ürün Ekle</button>
+
+                <div class="message" id="message"></div>
+
+            </form>
+        </div>
+
+        <div class="panel">
+            <h3>Kayıtlı Ürünler</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ürün</th>
+                        <th>Fiyat</th>
+                        <th>Stok</th>
+                    </tr>
+                </thead>
+
+                <tbody id="productTable">
+                    <tr>
+                        <td colspan="3">Ürünler yükleniyor...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        const form = document.getElementById("productForm");
+        const table = document.getElementById("productTable");
+        const message = document.getElementById("message");
+
+        async function loadProducts() {
+            try {
+                const response = await fetch("/products/");
+                if (!response.ok) throw new Error();
+
+                const products = await response.json();
+
+                table.innerHTML = "";
+
+                if (products.length === 0) {
+                    table.innerHTML =
+                        '<tr><td colspan="3">Henüz ürün yok.</td></tr>';
+                    return;
+                }
+
+                products.forEach(product => {
+                    const row = document.createElement("tr");
+
+                    const name = document.createElement("td");
+                    name.textContent = product.name;
+
+                    const price = document.createElement("td");
+                    price.textContent =
+                        Number(product.price).toFixed(2) + " TL";
+
+                    const stock = document.createElement("td");
+                    stock.textContent = product.stock_quantity + " adet";
+
+                    row.append(name, price, stock);
+                    table.appendChild(row);
+                });
+
+            } catch (error) {
+                table.innerHTML =
+                    '<tr><td colspan="3">Ürünler yüklenemedi.</td></tr>';
+            }
+        }
+
+        form.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch("/products/", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.detail || "Ürün eklenemedi.");
+                }
+
+                message.style.color = "green";
+                message.textContent = "Ürün başarıyla eklendi!";
+
+                form.reset();
+                loadProducts();
+
+            } catch (error) {
+                message.style.color = "red";
+                message.textContent = error.message;
+            }
+        });
+
+        loadProducts();
+    </script>
+
+</body>
+</html>

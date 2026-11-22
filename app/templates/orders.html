@@ -1,0 +1,434 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sipariş Yönetimi | StockMaster</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6fb;
+            padding: 35px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 28px;
+        }
+
+        h2 {
+            font-size: 19px;
+            margin-bottom: 20px;
+        }
+
+        .back {
+            text-decoration: none;
+            color: white;
+            background: #334155;
+            padding: 11px 18px;
+            border-radius: 8px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.04);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #dbe1ea;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+
+        button {
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .add-btn {
+            background: #2563eb;
+            color: white;
+            margin-top: 18px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px 12px;
+            text-align: left;
+            border-bottom: 1px solid #edf0f5;
+            white-space: nowrap;
+        }
+
+        th {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 12px;
+        }
+
+        .message {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 750px) {
+            body {
+                padding: 15px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="header">
+        <div>
+            <h1>Sipariş Yönetimi</h1>
+            <p style="color:#64748b; margin-top:8px;">
+                Siparişlerini oluştur ve takip et.
+            </p>
+        </div>
+
+        <a href="/" class="back">← Ana Panele Dön</a>
+    </div>
+
+    <div class="card">
+        <h2>Yeni Sipariş Oluştur</h2>
+
+        <form id="orderForm">
+            <div class="form-grid">
+
+                <div>
+                    <label>Müşteri</label>
+                    <select name="customer_id" id="customerSelect" required>
+                        <option value="">Müşteri seçin</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Ürün</label>
+                    <select name="product_id" id="productSelect" required>
+                        <option value="">Ürün seçin</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Adet</label>
+                    <input
+                        type="number"
+                        name="quantity"
+                        id="quantity"
+                        min="1"
+                        value="1"
+                        required
+                    >
+                </div>
+
+            </div>
+
+            <p id="stockInfo" style="margin-top:15px; color:#64748b;"></p>
+
+            <button type="submit" class="add-btn">
+                + Sipariş Oluştur
+            </button>
+        </form>
+
+        <p id="message" class="message"></p>
+    </div>
+
+    <div class="card">
+        <h2>Kayıtlı Siparişler</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sipariş No</th>
+                        <th>Müşteri</th>
+                        <th>Toplam Tutar</th>
+                        <th>Durum</th>
+                        <th>Oluşturulma Tarihi</th>
+                    </tr>
+                </thead>
+
+                <tbody id="orderTable">
+                    <tr>
+                        <td colspan="5">Siparişler yükleniyor...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const customerSelect = document.getElementById("customerSelect");
+    const productSelect = document.getElementById("productSelect");
+    const quantityInput = document.getElementById("quantity");
+    const stockInfo = document.getElementById("stockInfo");
+    const orderTable = document.getElementById("orderTable");
+    const message = document.getElementById("message");
+    const orderForm = document.getElementById("orderForm");
+
+    let customers = [];
+    let products = [];
+
+    async function loadFormData() {
+        try {
+            const [customerResponse, productResponse] = await Promise.all([
+                fetch("/customers/"),
+                fetch("/products/")
+            ]);
+
+            if (!customerResponse.ok || !productResponse.ok) {
+                throw new Error("Müşteri veya ürün bilgileri alınamadı.");
+            }
+
+            customers = await customerResponse.json();
+            products = await productResponse.json();
+
+            customerSelect.innerHTML =
+                '<option value="">Müşteri seçin</option>';
+
+            customers.forEach(customer => {
+                const option = document.createElement("option");
+                option.value = customer.id;
+                option.textContent = customer.full_name;
+                customerSelect.appendChild(option);
+            });
+
+            productSelect.innerHTML =
+                '<option value="">Ürün seçin</option>';
+
+            products.forEach(product => {
+                const option = document.createElement("option");
+                option.value = product.id;
+                option.textContent =
+                    product.name + " - " +
+                    Number(product.price).toFixed(2) + " TL";
+
+                option.disabled = product.stock_quantity <= 0;
+                productSelect.appendChild(option);
+            });
+
+            updateStockInfo();
+
+        } catch (error) {
+            message.textContent = error.message;
+            message.style.color = "red";
+        }
+    }
+
+    function updateStockInfo() {
+        const productId = Number(productSelect.value);
+        const product = products.find(p => p.id === productId);
+
+        if (!product) {
+            stockInfo.textContent = "";
+            return;
+        }
+
+        stockInfo.textContent =
+            "Mevcut stok: " + product.stock_quantity + " adet";
+    }
+
+    productSelect.addEventListener("change", updateStockInfo);
+
+    async function loadOrders() {
+        try {
+            const response = await fetch("/orders/");
+
+            if (!response.ok) {
+                throw new Error("Siparişler alınamadı.");
+            }
+
+            const orders = await response.json();
+
+            orderTable.innerHTML = "";
+
+            if (orders.length === 0) {
+                orderTable.innerHTML =
+                    '<tr><td colspan="5">Henüz sipariş bulunmuyor.</td></tr>';
+                return;
+            }
+
+            orders.sort((a, b) => b.id - a.id);
+
+            orders.forEach(order => {
+                const customer = customers.find(
+                    c => c.id === order.customer_id
+                );
+
+                const row = document.createElement("tr");
+
+                const values = [
+                    "#" + order.id,
+                    customer ? customer.full_name : "Müşteri #" + order.customer_id,
+                    Number(order.total_amount).toFixed(2) + " TL",
+                    order.status,
+                    order.created_at
+                        ? new Date(order.created_at).toLocaleString("tr-TR")
+                        : "-"
+                ];
+
+                values.forEach((value, index) => {
+                    const cell = document.createElement("td");
+
+                    if (index === 3) {
+                        const status = document.createElement("span");
+                        status.className = "status";
+                        status.textContent = value;
+                        cell.appendChild(status);
+                    } else {
+                        cell.textContent = value;
+                    }
+
+                    row.appendChild(cell);
+                });
+
+                orderTable.appendChild(row);
+            });
+
+        } catch (error) {
+            orderTable.innerHTML =
+                '<tr><td colspan="5">Siparişler yüklenemedi.</td></tr>';
+            message.textContent = error.message;
+            message.style.color = "red";
+        }
+    }
+
+    orderForm.addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(orderForm);
+        const quantity = Number(quantityInput.value);
+        const productId = Number(productSelect.value);
+
+        const product = products.find(p => p.id === productId);
+
+        if (!product) {
+            message.textContent = "Lütfen bir ürün seçin.";
+            message.style.color = "red";
+            return;
+        }
+
+        if (quantity <= 0 || !Number.isInteger(quantity)) {
+            message.textContent = "Adet en az 1 ve tam sayı olmalıdır.";
+            message.style.color = "red";
+            return;
+        }
+
+        if (quantity > product.stock_quantity) {
+            message.textContent = "Yetersiz stok!";
+            message.style.color = "red";
+            return;
+        }
+
+        try {
+            const response = await fetch("/orders/", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.detail || "Sipariş oluşturulamadı.");
+            }
+
+            message.textContent =
+                "Sipariş başarıyla oluşturuldu! Toplam: " +
+                Number(result.total_amount).toFixed(2) + " TL";
+
+            message.style.color = "green";
+
+            orderForm.reset();
+
+            await loadFormData();
+            await loadOrders();
+
+        } catch (error) {
+            message.textContent = error.message;
+            message.style.color = "red";
+        }
+    });
+
+    async function initializePage() {
+        await loadFormData();
+        await loadOrders();
+    }
+
+    initializePage();
+</script>
+
+</body>
+</html>

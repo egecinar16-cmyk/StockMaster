@@ -1,0 +1,384 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Müşteri Yönetimi | StockMaster</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6fb;
+            padding: 35px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 28px;
+        }
+
+        .back {
+            text-decoration: none;
+            color: white;
+            background: #334155;
+            padding: 11px 18px;
+            border-radius: 8px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.04);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 19px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #dbe1ea;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        textarea {
+            grid-column: 1 / -1;
+            resize: vertical;
+        }
+
+        button {
+            border: none;
+            padding: 11px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .add-btn {
+            background: #2563eb;
+            color: white;
+            margin-top: 15px;
+        }
+
+        .edit-btn {
+            background: #e0e7ff;
+            color: #3730a3;
+            margin-right: 5px;
+        }
+
+        .delete-btn {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px 12px;
+            text-align: left;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        th {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .message {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 15px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            textarea {
+                grid-column: auto;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="header">
+        <div>
+            <h1>Müşteri Yönetimi</h1>
+            <p style="color:#64748b; margin-top:8px;">
+                Müşterilerini görüntüle ve yönet.
+            </p>
+        </div>
+
+        <a href="/" class="back">← Ana Panele Dön</a>
+    </div>
+
+    <div class="card">
+        <h2>Yeni Müşteri Ekle</h2>
+
+        <form id="customerForm">
+            <div class="form-grid">
+                <input type="text" name="full_name"
+                       placeholder="Ad Soyad" required>
+
+                <input type="email" name="email"
+                       placeholder="E-posta">
+
+                <input type="text" name="phone"
+                       placeholder="Telefon">
+
+                <textarea name="address"
+                          placeholder="Adres"
+                          rows="3"></textarea>
+            </div>
+
+            <button type="submit" class="add-btn">
+                + Müşteri Ekle
+            </button>
+        </form>
+
+        <p id="message" class="message"></p>
+    </div>
+
+    <div class="card">
+        <h2>Kayıtlı Müşteriler</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ad Soyad</th>
+                        <th>E-posta</th>
+                        <th>Telefon</th>
+                        <th>Adres</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+
+                <tbody id="customerTable">
+                    <tr>
+                        <td colspan="6">Müşteriler yükleniyor...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const API_URL = "/customers/";
+
+    const customerForm = document.getElementById("customerForm");
+    const customerTable = document.getElementById("customerTable");
+    const message = document.getElementById("message");
+
+    async function loadCustomers() {
+        try {
+            const response = await fetch(API_URL);
+
+            if (!response.ok) {
+                throw new Error("Müşteriler alınamadı.");
+            }
+
+            const customers = await response.json();
+
+            customerTable.innerHTML = "";
+
+            if (customers.length === 0) {
+                customerTable.innerHTML =
+                    '<tr><td colspan="6">Henüz müşteri bulunmuyor.</td></tr>';
+                return;
+            }
+
+            customers.forEach(customer => {
+                const row = document.createElement("tr");
+
+                const values = [
+                    customer.id,
+                    customer.full_name,
+                    customer.email || "-",
+                    customer.phone || "-",
+                    customer.address || "-"
+                ];
+
+                values.forEach(value => {
+                    const cell = document.createElement("td");
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+
+                const actions = document.createElement("td");
+
+                const editButton = document.createElement("button");
+                editButton.textContent = "Düzenle";
+                editButton.className = "edit-btn";
+                editButton.addEventListener("click", () => editCustomer(customer));
+
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Sil";
+                deleteButton.className = "delete-btn";
+                deleteButton.addEventListener("click", () => deleteCustomer(customer.id));
+
+                actions.appendChild(editButton);
+                actions.appendChild(deleteButton);
+                row.appendChild(actions);
+
+                customerTable.appendChild(row);
+            });
+
+        } catch (error) {
+            customerTable.innerHTML =
+                '<tr><td colspan="6">Müşteriler yüklenemedi.</td></tr>';
+            message.textContent = error.message;
+        }
+    }
+
+    customerForm.addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(customerForm);
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error("Müşteri eklenemedi.");
+            }
+
+            customerForm.reset();
+            message.textContent = "Müşteri başarıyla eklendi!";
+            message.style.color = "green";
+
+            loadCustomers();
+
+        } catch (error) {
+            message.textContent = error.message;
+            message.style.color = "red";
+        }
+    });
+
+    async function editCustomer(customer) {
+        const fullName = prompt("Ad Soyad:", customer.full_name);
+        if (fullName === null) return;
+
+        if (!fullName.trim()) {
+            alert("Ad Soyad boş bırakılamaz.");
+            return;
+        }
+
+        const email = prompt("E-posta:", customer.email || "");
+        if (email === null) return;
+
+        const phone = prompt("Telefon:", customer.phone || "");
+        if (phone === null) return;
+
+        const address = prompt("Adres:", customer.address || "");
+        if (address === null) return;
+
+        const formData = new FormData();
+        formData.append("full_name", fullName.trim());
+        formData.append("email", email);
+        formData.append("phone", phone);
+        formData.append("address", address);
+
+        try {
+            const response = await fetch(API_URL + customer.id, {
+                method: "PUT",
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error("Müşteri güncellenemedi.");
+            }
+
+            message.textContent = "Müşteri başarıyla güncellendi!";
+            message.style.color = "green";
+            loadCustomers();
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function deleteCustomer(customerId) {
+        if (!confirm("Bu müşteriyi silmek istediğine emin misin?")) {
+            return;
+        }
+
+        try {
+            const response = await fetch(API_URL + customerId, {
+                method: "DELETE"
+            });
+
+            if (!response.ok) {
+                throw new Error("Müşteri silinemedi.");
+            }
+
+            message.textContent = "Müşteri silindi.";
+            message.style.color = "green";
+            loadCustomers();
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    loadCustomers();
+</script>
+
+</body>
+</html>

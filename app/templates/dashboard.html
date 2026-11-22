@@ -1,0 +1,369 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockMaster | Yönetim Paneli</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            color: #1e293b;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 245px;
+            background: #172033;
+            color: white;
+            padding: 28px 18px;
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: bold;
+            margin-bottom: 45px;
+        }
+
+        .logo span {
+            color: #38bdf8;
+        }
+
+        .menu-title {
+            color: #94a3b8;
+            font-size: 12px;
+            margin: 25px 10px 12px;
+            text-transform: uppercase;
+        }
+
+        .menu a {
+            display: block;
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 13px;
+            border-radius: 8px;
+            margin-bottom: 7px;
+        }
+
+        .menu a.active,
+        .menu a:hover {
+            background: #263650;
+            color: white;
+        }
+
+        .main {
+            flex: 1;
+            padding: 35px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            gap: 20px;
+        }
+
+        .topbar h1 {
+            font-size: 28px;
+        }
+
+        .topbar p {
+            color: #64748b;
+            margin-top: 7px;
+        }
+
+        .admin-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin {
+            background: white;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .logout-btn:hover {
+            background: #b91c1c;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 13px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.04);
+        }
+
+        .card p {
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+
+        .card h2 {
+            font-size: 28px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 13px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.04);
+        }
+
+        .panel h3 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 10px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .status {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stock-count {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        @media (max-width: 1000px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 650px) {
+            body {
+                display: block;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .main {
+                padding: 20px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .admin-area {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <div class="logo">Stock<span>Master</span></div>
+
+        <div class="menu-title">Ana Menü</div>
+
+        <nav class="menu">
+            <a href="/" class="active">▦ Genel Bakış</a>
+            <a href="/docs">▣ API Yönetimi</a>
+            <a href="/product-management">▤ Ürünler</a>
+            <a href="/customer-management">Müşteriler</a>
+            <a href="/order-management">Siparişler</a>
+            <a href="/reports-page">Raporlar</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div>
+                <h1>Genel Bakış</h1>
+                <p>StockMaster yönetim paneline hoş geldin.</p>
+            </div>
+
+            <div class="admin-area">
+                <div class="admin">
+                    {{ user.username }}
+                </div>
+
+                <button
+                    class="logout-btn"
+                    id="logoutButton"
+                    type="button"
+                >
+                    Çıkış Yap
+                </button>
+            </div>
+        </header>
+
+        <section class="cards">
+
+            <div class="card">
+                <p>Toplam Ürün</p>
+                <h2>{{ total_products }}</h2>
+            </div>
+
+            <div class="card">
+                <p>Toplam Müşteri</p>
+                <h2>{{ total_customers }}</h2>
+            </div>
+
+            <div class="card">
+                <p>Toplam Sipariş</p>
+                <h2>{{ total_orders }}</h2>
+            </div>
+
+            <div class="card">
+                <p>Toplam Satış</p>
+                <h2>{{ "%.2f"|format(total_sales) }} TL</h2>
+            </div>
+
+        </section>
+
+        <section class="content">
+
+            <div class="panel">
+                <h3>Son Siparişler</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sipariş No</th>
+                            <th>Müşteri</th>
+                            <th>Tutar</th>
+                            <th>Durum</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td>#{{ order.id }}</td>
+                            <td>{{ order.customer.full_name }}</td>
+                            <td>{{ "%.2f"|format(order.total_amount) }} TL</td>
+                            <td>
+                                <span class="status">
+                                    {{ order.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">
+                                Henüz sipariş bulunmuyor.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <h3>Kritik Stok Uyarıları</h3>
+
+                {% for product in low_stock_products %}
+                <div class="stock-item">
+                    <span>{{ product.name }}</span>
+                    <span class="stock-count">
+                        {{ product.stock_quantity }} adet
+                    </span>
+                </div>
+                {% else %}
+                <p>Şu anda kritik stokta ürün bulunmuyor.</p>
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        document.getElementById("logoutButton").addEventListener("click", async function () {
+            try {
+                const response = await fetch("/auth/logout", {
+                    method: "POST"
+                });
+
+                if (response.ok) {
+                    window.location.href = "/login";
+                } else {
+                    alert("Çıkış yapılırken bir hata oluştu.");
+                }
+
+            } catch (error) {
+                alert("Sunucuya bağlanılamadı.");
+            }
+        });
+    </script>
+
+</body>
+</html>

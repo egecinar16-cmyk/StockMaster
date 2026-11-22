@@ -1,0 +1,338 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raporlama | StockMaster</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6fb;
+            padding: 35px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 28px;
+        }
+
+        h2 {
+            font-size: 19px;
+            margin-bottom: 20px;
+        }
+
+        .back {
+            text-decoration: none;
+            color: white;
+            background: #334155;
+            padding: 11px 18px;
+            border-radius: 8px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.04);
+        }
+
+        .filter {
+            display: flex;
+            align-items: end;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter div {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dbe1ea;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #edf0f5;
+        }
+
+        .stat-box p {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .stat-box strong {
+            font-size: 28px;
+        }
+
+        .daily strong {
+            color: #2563eb;
+        }
+
+        .monthly strong {
+            color: #059669;
+        }
+
+        .message {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 650px) {
+            body {
+                padding: 15px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="header">
+        <div>
+            <h1>Satış Raporları</h1>
+            <p style="color:#64748b; margin-top:8px;">
+                Günlük ve aylık satış performansını takip et.
+            </p>
+        </div>
+
+        <a href="/" class="back">← Ana Panele Dön</a>
+    </div>
+
+    <div class="card">
+        <h2>Günlük Rapor</h2>
+
+        <div class="filter">
+            <div>
+                <label>Rapor Tarihi</label>
+                <input type="date" id="reportDate">
+            </div>
+
+            <button onclick="loadDailyReport()">
+                Günlük Raporu Getir
+            </button>
+        </div>
+
+        <div class="stats daily" style="margin-top:25px;">
+            <div class="stat-box">
+                <p>Günlük Sipariş Sayısı</p>
+                <strong id="dailyOrders">-</strong>
+            </div>
+
+            <div class="stat-box">
+                <p>Günlük Satış Tutarı</p>
+                <strong id="dailySales">-</strong>
+            </div>
+        </div>
+
+        <p id="dailyMessage" class="message"></p>
+    </div>
+
+    <div class="card">
+        <h2>Aylık Rapor</h2>
+
+        <div class="filter">
+            <div>
+                <label>Yıl</label>
+                <input type="number" id="reportYear" min="1" max="9999">
+            </div>
+
+            <div>
+                <label>Ay</label>
+                <select id="reportMonth">
+                    <option value="1">Ocak</option>
+                    <option value="2">Şubat</option>
+                    <option value="3">Mart</option>
+                    <option value="4">Nisan</option>
+                    <option value="5">Mayıs</option>
+                    <option value="6">Haziran</option>
+                    <option value="7">Temmuz</option>
+                    <option value="8">Ağustos</option>
+                    <option value="9">Eylül</option>
+                    <option value="10">Ekim</option>
+                    <option value="11">Kasım</option>
+                    <option value="12">Aralık</option>
+                </select>
+            </div>
+
+            <button onclick="loadMonthlyReport()">
+                Aylık Raporu Getir
+            </button>
+        </div>
+
+        <div class="stats monthly" style="margin-top:25px;">
+            <div class="stat-box">
+                <p>Aylık Sipariş Sayısı</p>
+                <strong id="monthlyOrders">-</strong>
+            </div>
+
+            <div class="stat-box">
+                <p>Aylık Satış Tutarı</p>
+                <strong id="monthlySales">-</strong>
+            </div>
+        </div>
+
+        <p id="monthlyMessage" class="message"></p>
+    </div>
+
+</div>
+
+<script>
+    const today = new Date();
+
+    function formatMoney(amount) {
+        return Number(amount).toLocaleString("tr-TR", {
+            style: "currency",
+            currency: "TRY"
+        });
+    }
+
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    }
+
+    document.getElementById("reportDate").value = formatDate(today);
+    document.getElementById("reportYear").value = today.getFullYear();
+    document.getElementById("reportMonth").value = today.getMonth() + 1;
+
+    async function loadDailyReport() {
+        const selectedDate = document.getElementById("reportDate").value;
+        const message = document.getElementById("dailyMessage");
+
+        if (!selectedDate) {
+            message.textContent = "Lütfen bir tarih seçin.";
+            message.style.color = "red";
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/reports/daily?report_date=${encodeURIComponent(selectedDate)}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Rapor alınamadı.");
+            }
+
+            document.getElementById("dailyOrders").textContent =
+                data.order_count;
+
+            document.getElementById("dailySales").textContent =
+                formatMoney(data.total_sales);
+
+            message.textContent = "Günlük rapor başarıyla yüklendi.";
+            message.style.color = "green";
+
+        } catch (error) {
+            message.textContent = error.message;
+            message.style.color = "red";
+        }
+    }
+
+    async function loadMonthlyReport() {
+        const year = document.getElementById("reportYear").value;
+        const month = document.getElementById("reportMonth").value;
+        const message = document.getElementById("monthlyMessage");
+
+        if (!year || Number(year) < 1 || Number(year) > 9999) {
+            message.textContent = "Geçerli bir yıl girin.";
+            message.style.color = "red";
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/reports/monthly?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Rapor alınamadı.");
+            }
+
+            document.getElementById("monthlyOrders").textContent =
+                data.order_count;
+
+            document.getElementById("monthlySales").textContent =
+                formatMoney(data.total_sales);
+
+            message.textContent = "Aylık rapor başarıyla yüklendi.";
+            message.style.color = "green";
+
+        } catch (error) {
+            message.textContent = error.message;
+            message.style.color = "red";
+        }
+    }
+
+    loadDailyReport();
+    loadMonthlyReport();
+</script>
+
+</body>
+</html>
