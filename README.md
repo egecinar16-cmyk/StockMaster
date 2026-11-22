@@ -17,6 +17,21 @@ The application helps businesses manage products, customers, stock levels, order
 - **Sales Reports:** View daily and monthly sales reports.
 - **Dashboard:** Monitor products, customers, orders, and sales.
 
+## 📸 Screenshots
+
+### Dashboard
+![StockMaster Dashboard](screenshots/dashboard.png)
+
+### Product Management
+![Product Management](screenshots/products.png)
+
+### Customer Management
+![Customer Management](screenshots/customers.png)
+
+### Order Management
+![Order Management](screenshots/orders.png)
+
+
 ## 🛠️ Technologies
 
 - Python 3.9
